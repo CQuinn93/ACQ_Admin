@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Project Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <style>
+    html, body {
+      overflow-x: hidden;
+    }
+    .project-header-flex {
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo" style="width:100%;display:flex;justify-content:center;align-items:center;margin-bottom:24px;">
+      <img src="assets/logo.png" alt="ACQ Logo" style="max-width:140px;max-height:60px;">
+    </div>
+    <div class="sidebar-user" id="sidebar-user">Welcome</div>
+    <nav style="flex:1 1 auto;width:100%;">
+      <a href="dashboard.html"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+      <a href="projects.html" class="active"><i class="bi bi-folder2-open me-2"></i>Projects</a>
+      <a href="files.html"><i class="bi bi-file-earmark-text me-2"></i>Files</a>
+      <a href="#"><i class="bi bi-chat-dots me-2"></i>Comments</a>
+    </nav>
+    <div style="width:100%;padding:32px 0 24px 0;display:flex;justify-content:center;align-items:center;">
+      <button class="btn btn-outline-light w-75" style="border-radius:8px;padding:12px 0;font-size:1.1rem;" id="logout-btn"><i class="bi bi-box-arrow-right me-2"></i>Log Out</button>
+    </div>
+  </div>
+  <div class="main-content">
+    <a href="projects.html" class="btn btn-link mb-3"><i class="bi bi-arrow-left"></i> Back to Projects</a>
+    <div class="row g-4">
+      <!-- Header -->
+      <div class="col-lg-8 col-12">
+        <div class="card p-4 mb-2" style="border-radius: 14px;">
+          <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between project-header-flex">
+            <div>
+              <h2 class="mb-1" id="project-title">Project Name (Placeholder)</h2>
+              <div class="text-muted" id="project-meta">
+                Code: <span>PRJ-001</span> &nbsp;|&nbsp; Client: <span>John Doe</span> &nbsp;|&nbsp; Stage: <span>Stage 1 - Drawings</span> &nbsp;|&nbsp; Created: <span>2024-05-01</span>
+              </div>
+            </div>
+            <div class="mt-3 mt-md-0">
+              <span class="badge bg-primary">In Progress</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4 col-12">
+        <!-- Project Info section removed; Recent Comments moved below main content -->
+      </div>
+      <!-- Main Dashboard Grid -->
+      <div class="row g-4 align-items-stretch">
+        <div class="col-lg-8 col-12">
+          <div class="row g-4">
+            <div class="col-md-6 col-12">
+              <div class="card p-4 mb-4" style="border-radius: 14px;">
+                <h5>Project Stage</h5>
+                <select class="form-select mb-3" id="stage-select" disabled>
+                  <option value="0">0 - Research & Survey</option>
+                  <option value="1">1 - Drawings</option>
+                  <option value="2">2 - Alterations & Finalise</option>
+                  <option value="3">3 - Documentation & Submission</option>
+                </select>
+                <button class="btn btn-primary w-100" disabled>Save Stage</button>
+              </div>
+            </div>
+            <div class="col-md-6 col-12">
+              <div class="card p-4 mb-4" style="border-radius: 14px;">
+                <h5>Checklist</h5>
+                <div id="checklist-items">
+                  <div><input type="checkbox" disabled> Checklist Item 1 (placeholder)</div>
+                  <div><input type="checkbox" disabled> Checklist Item 2 (placeholder)</div>
+                  <div><input type="checkbox" disabled> Checklist Item 3 (placeholder)</div>
+                </div>
+                <button class="btn btn-primary w-100 mt-3" disabled>Save Checklist</button>
+              </div>
+            </div>
+          </div>
+          <div class="card p-4 mb-4 card-scrollable" style="border-radius: 14px;">
+            <h4>Files</h4>
+            <div class="mb-2"><b>Draft</b></div>
+            <ul>
+              <li>Draft File 1 (0 comments)</li>
+              <li>Draft File 2 (2 comments)</li>
+            </ul>
+            <div class="mb-2 mt-3"><b>Review</b></div>
+            <ul>
+              <li>Review File 1 (1 comment)</li>
+            </ul>
+            <div class="mb-2 mt-3"><b>Final</b></div>
+            <ul>
+              <li>Final File 1 (0 comments)</li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-lg-4 col-12 d-flex flex-column">
+          <div class="card p-4 mb-4 card-scrollable flex-grow-1" style="border-radius: 14px;">
+            <h5>Recent Comments</h5>
+            <ul>
+              <li>Comment 1 (placeholder)</li>
+              <li>Comment 2 (placeholder)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Modal for viewing comment (always present for accessibility) -->
+  <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="commentModalLabel">Comment Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="modal-single-col" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 24px;">
+          <!-- Content will be injected here -->
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const SUPABASE_URL = 'https://updolqrzrhsupfqbmipd.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwZG9scXJ6cmhzdXBmcWJtaXBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3OTA5MTEsImV4cCI6MjA2MjM2NjkxMX0.ZTcBrD9RJ_7nw0zvxJxk1YGcxYuSE14lbUQZ-YrEQbU';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function getProjectIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    async function loadProject() {
+      const projectId = getProjectIdFromUrl();
+      if (!projectId) {
+        document.querySelector('.main-content').innerHTML = '<div class="alert alert-danger">No project ID provided.</div>';
+        return;
+      }
+      // Show loading state
+      document.querySelector('.main-content').innerHTML = '<div>Loading project...</div>';
+      // Fetch all project fields
+      const { data: project, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+      if (error || !project) {
+        document.querySelector('.main-content').innerHTML = '<div class="alert alert-danger">Project not found.</div>';
+        return;
+      }
+      // Fetch files for this project (PDFs only)
+      const { data: files } = await supabase
+        .from('files')
+        .select('id, title, file_number, stage, file_type, created_at, file_path')
+        .eq('project_id', projectId)
+        .ilike('file_type', '%pdf%')
+        .order('created_at', { ascending: true });
+      // Fetch comments for this project
+      const { data: comments } = await supabase
+        .from('comments')
+        .select('id, file_id, author, content, created_at, is_answered')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+      // Stages: Draft, Review, Approved, Final
+      const stages = ['Draft', 'Review', 'Approved', 'Final'];
+      const filesByStage = { Draft: [], Review: [], Approved: [], Final: [] };
+      if (files) {
+        files.forEach(f => {
+          const stage = (f.stage || '').toLowerCase();
+          if (stage.includes('draft')) filesByStage.Draft.push(f);
+          else if (stage.includes('review')) filesByStage.Review.push(f);
+          else if (stage.includes('approved')) filesByStage.Approved.push(f);
+          else if (stage.includes('final')) filesByStage.Final.push(f);
+          else filesByStage.Draft.push(f); // fallback
+        });
+      }
+      // Count comments per file
+      const commentCountByFile = {};
+      if (comments) {
+        comments.forEach(c => {
+          if (!commentCountByFile[c.file_id]) commentCountByFile[c.file_id] = 0;
+          commentCountByFile[c.file_id]++;
+        });
+      }
+      // Helper: time ago
+      function timeAgo(dateString) {
+        const now = new Date();
+        const then = new Date(dateString);
+        const diffMs = now - then;
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 1) return 'just now';
+        if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+        const diffDays = Math.floor(diffHours / 24);
+        return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+      }
+      // Helper: get signed URL for a file
+      async function getSignedUrl(filePath) {
+        const { data, error } = await supabase.storage
+          .from('documents')
+          .createSignedUrl(filePath, 60 * 60); // 1 hour expiry
+        return data?.signedUrl || null;
+      }
+      // Prepare tab data for files
+      const tabData = {};
+      for (const stage of stages) {
+        tabData[stage] = {
+          files: filesByStage[stage] || [],
+          count: (filesByStage[stage] || []).length,
+          hasComments: (filesByStage[stage] || []).some(f => (commentCountByFile[f.id] || 0) > 0)
+        };
+      }
+      // Map file_id to file info for comments
+      const fileIdToInfo = {};
+      files.forEach(f => { fileIdToInfo[f.id] = f; });
+      // Render dashboard layout (async for signed URLs)
+      let filesHtml = '';
+      for (const stage of stages) {
+        filesHtml += `<div class="mb-2 mt-3"><b>${stage}</b></div><ul>`;
+        if (filesByStage[stage] && filesByStage[stage].length) {
+          for (const f of filesByStage[stage]) {
+            const signedUrl = await getSignedUrl(f.file_path);
+            filesHtml += `<li style='margin-bottom:10px;'>
+              <span style="min-width:0;max-width:70%;display:block;">
+                <span style="font-weight:600;">${f.file_number ? f.file_number + ' ' : ''}</span>
+                <span style="font-size:0.97em;word-break:break-word;white-space:normal;">${f.title}</span>
+                <span class="text-muted" style="font-size:0.95em;"> (${commentCountByFile[f.id] || 0} comment${(commentCountByFile[f.id]||0)===1?'':'s'})</span>
+              </span>
+              <a href='${signedUrl}' target='_blank' rel='noopener'>
+                <button class='btn btn-sm btn-outline-primary ms-2'>View File</button>
+              </a>
+            </li>`;
+          }
+        } else {
+          filesHtml += '<li class="text-muted">No files</li>';
+        }
+        filesHtml += '</ul>';
+      }
+      document.querySelector('.main-content').innerHTML = `
+        <a href="projects.html" class="btn btn-link mb-3"><i class="bi bi-arrow-left"></i> Back to Projects</a>
+        <div class="row g-4">
+          <div class="col-12">
+            <div class="card p-4 mb-2" style="border-radius: 14px;">
+              <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between">
+                <div>
+                  <h2 class="mb-1" id="project-title">${project.name}</h2>
+                  <div class="text-muted" id="project-meta">
+                    Code: <span>${project.code || ''}</span> &nbsp;|&nbsp; Client: <span>${project.client || ''}</span> &nbsp;|&nbsp; Stage: <span>${project.stage || ''}</span> &nbsp;|&nbsp; Created: <span>${project.created_at ? new Date(project.created_at).toLocaleDateString() : ''}</span>
+                  </div>
+                </div>
+                <div class="mt-3 mt-md-0">
+                  <span class="badge bg-primary">${project.stage || 'In Progress'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-8 col-12">
+            <div class="row g-4">
+              <div class="col-md-6 col-12">
+                <div class="card p-4 mb-4" style="border-radius: 14px;">
+                  <h5>Project Stage</h5>
+                  <select class="form-select mb-3" id="stage-select">
+                    <option value="0">0 - Research & Survey</option>
+                    <option value="1">1 - Drawings</option>
+                    <option value="2">2 - Alterations & Finalise</option>
+                    <option value="3">3 - Documentation & Submission</option>
+                  </select>
+                  <button class="btn w-100" id="save-stage-btn" style="background:#0F112B;color:#fff;">Save Stage</button>
+                </div>
+              </div>
+              <div class="col-md-6 col-12">
+                <div class="card p-4 mb-4" style="border-radius: 14px;">
+                  <h5>Checklist</h5>
+                  <div id="checklist-items"></div>
+                  <button class="btn w-100 mt-3" id="save-checklist-btn" style="background:#0F112B;color:#fff;">Save Checklist</button>
+                </div>
+              </div>
+            </div>
+            <div class="card p-4 mb-4 card-scrollable" style="border-radius: 14px;">
+              <h4>Files</h4>
+              <ul class="nav nav-tabs" id="fileTabs" role="tablist">
+                ${stages.map((stage, i) => `
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link${i===0?' active':''}"
+                      id="tab-${stage.toLowerCase()}"
+                      data-bs-toggle="tab"
+                      data-bs-target="#tab-pane-${stage.toLowerCase()}"
+                      type="button" role="tab"
+                      aria-controls="tab-pane-${stage.toLowerCase()}"
+                      aria-selected="${i===0?'true':'false'}"
+                      style="border:1.5px solid ${tabData[stage].hasComments ? '#4fc3f7' : '#dee2e6'};border-bottom:none;">
+                      ${stage} <span class="badge bg-secondary ms-1">${tabData[stage].count}</span>
+                    </button>
+                  </li>
+                `).join('')}
+              </ul>
+              <div class="tab-content" id="fileTabsContent" style="border:1.5px solid #dee2e6;border-top:none;border-radius:0 0 8px 8px;padding:16px 8px 8px 8px;">
+                ${stages.map((stage, i) => `
+                  <div class="tab-pane fade${i===0?' show active':''}" id="tab-pane-${stage.toLowerCase()}" role="tabpanel" aria-labelledby="tab-${stage.toLowerCase()}">
+                    <ul class="list-group list-group-flush">
+                      ${tabData[stage].files.length ? tabData[stage].files.map(f => `
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="border:none;">
+                          <span style="min-width:0;max-width:70%;display:block;">
+                            <span style="font-weight:600;">${f.file_number ? f.file_number + ' ' : ''}</span>
+                            <span style="font-size:0.97em;word-break:break-word;white-space:normal;">${f.title}</span>
+                            <span class="text-muted" style="font-size:0.95em;"> (${commentCountByFile[f.id] || 0} comment${(commentCountByFile[f.id]||0)===1?'':'s'})</span>
+                          </span>
+                          <span class="file-view-btn" data-file-id="${f.id}" data-file-path="${encodeURIComponent(f.file_path)}"></span>
+                        </li>
+                      `).join('') : '<li class="list-group-item text-muted">No files</li>'}
+                    </ul>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-12 d-flex flex-column">
+            <div class="card p-4 mb-4 card-scrollable flex-grow-1" style="border-radius: 14px;">
+              <h5>Recent Comments</h5>
+              <ul>
+                ${(comments && comments.length) ? comments.slice(0,5).map((c, idx) => {
+                  const file = fileIdToInfo[c.file_id];
+                  return `<li class="d-flex justify-content-between align-items-center" style="margin-bottom:12px;">
+                    <span style="color:#1976d2;font-size:0.98em;font-weight:600;">${file ? (file.file_number ? file.file_number + ' ' : '') + file.title : 'Unknown Drawing'}</span>
+                    <button class="btn btn-sm btn-outline-primary ms-2 view-comment-btn" data-comment-idx="${idx}">View Comment</button>
+                  </li>`;
+                }).join('') : '<li class="text-muted">No comments yet.</li>'}
+              </ul>
+            </div>
+          </div>
+        </div>
+      `;
+      // Modal HTML for viewing comment
+      function attachViewCommentListeners() {
+        document.querySelectorAll('.view-comment-btn').forEach(btn => {
+          btn.addEventListener('click', async function() {
+            const idx = parseInt(this.getAttribute('data-comment-idx'));
+            const c = comments[idx];
+            const file = fileIdToInfo[c.file_id];
+            // Fetch project for modal
+            let project = null;
+            if (file && file.project_id) {
+              const { data: proj } = await supabase
+                .from('projects')
+                .select('id, name')
+                .eq('id', file.project_id)
+                .single();
+              project = proj;
+            }
+            // Build modal content
+            let modalHtml = '';
+            modalHtml += `<div style='font-size:1.18em;font-weight:700;text-align:center;margin-bottom:8px;'>${project ? project.name : ''}</div>`;
+            modalHtml += `<div style='font-size:1.05em;font-weight:500;text-align:center;margin-bottom:18px;color:#1976d2;'>${file ? `<a href=\"comment_view.html?comment_id=${encodeURIComponent(c.id)}\" target=\"_blank\" style=\"color:#1976d2;text-decoration:underline;\">${file.file_number ? file.file_number + ' ' : ''}${file.title}</a>` : 'Unknown Drawing'}</div>`;
+            modalHtml += `<div style='font-size:1.01em;text-align:center;max-width:480px;margin:0 auto 18px auto;white-space:pre-line;line-height:1.5;'>${c.content}</div>`;
+            modalHtml += `<div style='color:#888;font-size:0.97em;text-align:center;margin-bottom:18px;'>By: <b>${c.author || 'Unknown'}</b> &middot; ${timeAgo(c.created_at)}</div>`;
+            modalHtml += `<div style='margin-bottom:18px;text-align:center;'><label style='font-weight:500;font-size:0.98em;'><input type='checkbox' id='answered-checkbox' ${c.is_answered ? 'checked' : ''} style='margin-right:6px;'/> Answered</label> <span id='answered-status' style='margin-left:10px;font-size:0.97em;'></span></div>`;
+            if (file && file.file_path) {
+              modalHtml += `<button class=\"btn btn-primary w-100\" style=\"font-size:1.1em;padding:12px 0;max-width:340px;margin:0 auto;display:block;\">View PDF & Comment Side-by-Side</button>`;
+            }
+            document.getElementById('modal-single-col').innerHTML = modalHtml;
+            // Button event
+            if (file && file.file_path) {
+              setTimeout(() => {
+                const openBtn = document.querySelector('#modal-single-col .btn');
+                if (openBtn) {
+                  openBtn.addEventListener('click', function() {
+                    window.open(`comment_view.html?comment_id=${encodeURIComponent(c.id)}`, '_blank', 'width=1200,height=800');
+                  });
+                }
+              }, 100);
+            }
+            // Checkbox event
+            setTimeout(() => {
+              const answeredCheckbox = document.getElementById('answered-checkbox');
+              if (answeredCheckbox) {
+                answeredCheckbox.addEventListener('change', async function() {
+                  const checked = this.checked;
+                  const statusSpan = document.getElementById('answered-status');
+                  statusSpan.textContent = 'Saving...';
+                  const { error } = await supabase
+                    .from('comments')
+                    .update({ is_answered: checked })
+                    .eq('id', c.id);
+                  if (!error) {
+                    statusSpan.textContent = 'Saved!';
+                    setTimeout(() => { statusSpan.textContent = ''; }, 1200);
+                    c.is_answered = checked;
+                  } else {
+                    statusSpan.textContent = 'Failed to save.';
+                  }
+                });
+              }
+            }, 200);
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('commentModal'));
+            modal.show();
+          });
+        });
+      }
+      // Attach listeners after rendering comments
+      setTimeout(attachViewCommentListeners, 0);
+      // Set stage selector
+      const stageSelect = document.getElementById('stage-select');
+      if (stageSelect && project.stage) {
+        // Map project.stage string to dropdown value
+        let stageNum = '';
+        if (/^0\s*-|Stage 0/i.test(project.stage)) stageNum = '0';
+        else if (/^1\s*-|Stage 1/i.test(project.stage)) stageNum = '1';
+        else if (/^2\s*-|Stage 2/i.test(project.stage)) stageNum = '2';
+        else if (/^3\s*-|Stage 3/i.test(project.stage)) stageNum = '3';
+        stageSelect.value = stageNum;
+      }
+      // Render checklist items for current stage
+      function renderChecklist(stageNum) {
+        const checklistDiv = document.getElementById('checklist-items');
+        if (!checklistDiv) return;
+        const checklistCols = Object.keys(project).filter(k => k.startsWith(stageNum + '_'));
+        if (checklistCols.length === 0) {
+          checklistDiv.innerHTML = '<div class="text-muted">No checklist items for this stage.</div>';
+          return;
+        }
+        checklistDiv.innerHTML = checklistCols.map(col => `
+          <div><input type="checkbox" id="chk_${col}" ${project[col] ? 'checked' : ''}> ${col.replace(/^\d_/, '').replace(/_/g, ' ')}</div>
+        `).join('');
+      }
+      // Initial render
+      renderChecklist(stageSelect.value);
+      // Update checklist when stage changes
+      stageSelect.addEventListener('change', function() {
+        renderChecklist(stageSelect.value);
+      });
+      // Save stage
+      document.getElementById('save-stage-btn').addEventListener('click', async function() {
+        const newStageNum = stageSelect.value;
+        const stageMap = {
+          '0': 'Stage 0: Local Research & Survey',
+          '1': 'Stage 1: Drawings',
+          '2': 'Stage 2: Alterations & Finalise',
+          '3': 'Stage 3: Documentation & Submission'
+        };
+        const { error } = await supabase
+          .from('projects')
+          .update({ stage: stageMap[newStageNum] })
+          .eq('id', projectId);
+        if (!error) {
+          alert('Stage updated!');
+          loadProject();
+        } else {
+          alert('Failed to update stage.');
+        }
+      });
+      // Save checklist
+      document.getElementById('save-checklist-btn').addEventListener('click', async function() {
+        const stageNum = stageSelect.value;
+        const checklistCols = Object.keys(project).filter(k => k.startsWith(stageNum + '_'));
+        const updates = {};
+        checklistCols.forEach(col => {
+          updates[col] = document.getElementById('chk_' + col).checked;
+        });
+        const { error } = await supabase
+          .from('projects')
+          .update(updates)
+          .eq('id', projectId);
+        if (!error) {
+          alert('Checklist updated!');
+          loadProject();
+        } else {
+          alert('Failed to update checklist.');
+        }
+      });
+      // After rendering, add View File buttons with signed URLs
+      for (const stage of stages) {
+        for (const f of tabData[stage].files) {
+          const btnSpan = document.querySelector(`.file-view-btn[data-file-id='${f.id}']`);
+          if (btnSpan) {
+            const signedUrl = await getSignedUrl(f.file_path);
+            btnSpan.innerHTML = `<a href='${signedUrl}' target='_blank' rel='noopener'><button class='btn btn-sm btn-outline-primary'>View File</button></a>`;
+          }
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('sidebar-user').textContent = 'Welcome';
+      const logoutBtn = document.getElementById('logout-btn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+          window.location.href = 'login.html';
+        });
+      }
+      loadProject();
+    });
+  </script>
+</body>
+</html>

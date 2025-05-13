@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ACQ Admin Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      min-height: 100vh;
+      height: 100vh;
+      background: none;
+      overflow: hidden;
+    }
+    .split-container {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+    .left-half {
+      background: #0F112B;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .logo {
+      width: 50%;
+      max-width: 320px;
+      max-height: 32vh;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+    .right-half {
+      background: #fff;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .login-container {
+      width: 100%;
+      max-width: 450px;
+      background: #0F112B;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+      color: #fff;
+    }
+    .login-container .form-label,
+    .login-container .form-control,
+    .login-container .form-control:focus {
+      color: #fff;
+      background: transparent;
+      border-color: #fff;
+    }
+    .login-container .form-control {
+      border-width: 2px;
+    }
+    .login-container .form-control:focus {
+      box-shadow: 0 0 0 0.2rem rgba(15,17,43,0.15);
+      background: transparent;
+      color: #fff;
+    }
+    .login-container .btn-primary {
+      background: #fff;
+      color: #0F112B;
+      border: none;
+      font-weight: bold;
+    }
+    .login-container .btn-primary:hover {
+      background: #e5e5e5;
+      color: #0F112B;
+    }
+    .login-container .text-danger {
+      color: #ff6b6b !important;
+    }
+    .login-icon {
+      font-size: 3rem;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 768px) {
+      .split-container {
+        flex-direction: column;
+      }
+      .left-half, .right-half {
+        flex: none;
+        width: 100vw;
+        height: 50vh;
+      }
+      .logo {
+        max-height: 18vh;
+      }
+      .login-container {
+        box-shadow: none;
+        border-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="split-container">
+    <div class="left-half">
+      <img src="assets/logo.png" alt="ACQ Logo" class="logo">
+    </div>
+    <div class="right-half">
+      <div class="login-container">
+        <div class="login-icon"><i class="bi bi-person-circle"></i></div>
+        <h3 class="text-center mb-4">Sign In</h3>
+        <form id="login-form">
+          <div class="mb-3">
+            <label for="email" class="form-label">Email address</label>
+            <input type="email" class="form-control" id="email" required autocomplete="username">
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" required autocomplete="current-password">
+          </div>
+          <div id="login-error" class="text-danger mb-3" style="display:none;"></div>
+          <button type="submit" class="btn btn-primary w-100">Login</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+    const SUPABASE_URL = 'https://updolqrzrhsupfqbmipd.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwZG9scXJ6cmhzdXBmcWJtaXBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3OTA5MTEsImV4cCI6MjA2MjM2NjkxMX0.ZTcBrD9RJ_7nw0zvxJxk1YGcxYuSE14lbUQZ-YrEQbU';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        console.log('Supabase login response:', { data, error }); // Debugging output
+        if (error) {
+          document.getElementById('login-error').innerText = error.message;
+          document.getElementById('login-error').style.display = 'block';
+        } else {
+          document.getElementById('login-error').style.display = 'block';
+          document.getElementById('login-error').innerText = 'Login successful! Redirecting...';
+          setTimeout(() => {
+            window.location.href = 'dashboard.html';
+          }, 1000);
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        document.getElementById('login-error').innerText = 'Unexpected error: ' + err.message;
+        document.getElementById('login-error').style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html> 

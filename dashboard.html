@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ACQ Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo" style="width:100%;display:flex;justify-content:center;align-items:center;margin-bottom:24px;">
+      <img src="assets/logo.png" alt="ACQ Logo" style="max-width:140px;max-height:60px;">
+    </div>
+    <div class="sidebar-user">
+      Welcome Craig
+    </div>
+    <nav style="flex:1 1 auto;width:100%;">
+      <a href="#" class="${window.location.pathname.endsWith('dashboard.html') ? 'active' : ''}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+      <a href="projects.html" class="${window.location.pathname.endsWith('projects.html') ? 'active' : ''}"><i class="bi bi-folder2-open me-2"></i>Projects</a>
+      <a href="files.html" class="${window.location.pathname.endsWith('files.html') ? 'active' : ''}"><i class="bi bi-file-earmark-text me-2"></i>Files</a>
+      <a href="#"><i class="bi bi-chat-dots me-2"></i>Comments</a>
+    </nav>
+    <div style="width:100%;padding:32px 0 24px 0;display:flex;justify-content:center;align-items:center;">
+      <button class="btn btn-outline-light w-75" style="border-radius:8px;padding:12px 0;font-size:1.1rem;"> <i class="bi bi-box-arrow-right me-2"></i>Log Out</button>
+    </div>
+  </div>
+  <div class="main-content">
+    <div class="dashboard-cards">
+      <div class="dashboard-card" id="card-current-projects" style="cursor:pointer;">
+        <div class="card-title">Current Projects</div>
+        <div class="card-value" id="current-projects">3</div>
+      </div>
+      <div class="dashboard-card" id="card-completed-projects" style="cursor:pointer;">
+        <div class="card-title">Completed Projects</div>
+        <div class="card-value" id="completed-projects">1</div>
+      </div>
+      <div class="dashboard-card" id="card-open-comments" style="cursor:pointer;">
+        <div class="card-title">Open Comments</div>
+        <div class="card-value" id="open-comments">3</div>
+      </div>
+      <div class="dashboard-card" id="card-files" style="cursor:pointer;">
+        <div class="card-title">Files</div>
+        <div class="card-value" id="files-count">13</div>
+      </div>
+    </div>
+    <div class="dashboard-cards" style="margin-bottom:32px;">
+      <div class="dashboard-card" style="background:#fff;color:#18192b;">
+        <div class="card-title"><i class="bi bi-chat-dots me-2"></i>Latest Comments</div>
+        <div id="latest-comments-list" style="display: flex; flex-direction: column; gap: 16px;">
+          <!-- Cards will be injected here -->
+        </div>
+      </div>
+      <div class="dashboard-card" style="background:#fff;color:#18192b;">
+        <div class="card-title"><i class="bi bi-file-earmark-text me-2"></i>Latest Files</div>
+        <div id="latest-files-list" style="display: flex; flex-direction: column; gap: 16px;">
+          <!-- Cards will be injected here -->
+        </div>
+      </div>
+    </div>
+    <div class="dashboard-cards">
+      <div class="dashboard-card" style="background:#fff;color:#18192b;align-items:center;">
+        <div class="card-title"><i class="bi bi-journal-text me-2"></i>Technical Guidance Docs</div>
+        <a href="https://www.gov.ie/en/department-of-housing-local-government-and-heritage/collections/technical-guidance-documents/" target="_blank" rel="noopener" style="font-weight:600;">View Documents</a>
+      </div>
+      <div class="dashboard-card" style="background:#fff;color:#18192b;align-items:center;">
+        <div class="card-title"><i class="bi bi-building me-2"></i>County Councils</div>
+        <a href="https://www.gov.ie/en/department-of-rural-and-community-development/publications/local-authorities/" target="_blank" rel="noopener" style="font-weight:600;">View Councils</a>
+      </div>
+      <div class="dashboard-card" style="background:#fff;color:#18192b;align-items:center;">
+        <div class="card-title"><i class="bi bi-globe2 me-2"></i>Online Planning App</div>
+        <a href="https://planning.localgov.ie/en/local-government-ireland-planning-system" target="_blank" rel="noopener" style="font-weight:600;">Go to Platform</a>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script>
+    const SUPABASE_URL = 'https://updolqrzrhsupfqbmipd.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwZG9scXJ6cmhzdXBmcWJtaXBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3OTA5MTEsImV4cCI6MjA2MjM2NjkxMX0.ZTcBrD9RJ_7nw0zvxJxk1YGcxYuSE14lbUQZ-YrEQbU';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function checkAuthAndLoadUser() {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Session:', session); // Debug
+      if (!session || !session.user) {
+        window.location.href = 'login.html';
+        return;
+      }
+      // Fetch user name from users table
+      const userEmail = session.user.email;
+      console.log('User email:', userEmail); // Debug
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('name')
+        .eq('email', userEmail)
+        .single();
+      console.log('User data:', userData, 'Error:', error); // Debug
+      if (userData && userData.name) {
+        document.querySelector('.sidebar-user').textContent = `Welcome ${userData.name}`;
+      } else {
+        document.querySelector('.sidebar-user').textContent = `Welcome`;
+      }
+    }
+
+    async function loadDashboardData() {
+      // Show loading states
+      document.getElementById('current-projects').textContent = '...';
+      document.getElementById('completed-projects').textContent = '...';
+      document.getElementById('open-comments').textContent = '...';
+      document.getElementById('files-count').textContent = '...';
+      document.getElementById('latest-comments-list').innerHTML = '<div>Loading...</div>';
+      document.getElementById('latest-files-list').innerHTML = '<div>Loading...</div>';
+
+      // Fetch counts
+      const [{ count: currentProjects }, { count: completedProjects }, { count: openComments }, { count: filesCount }] = await Promise.all([
+        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('iscomplete', false),
+        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('iscomplete', true),
+        supabase.from('comments').select('id', { count: 'exact', head: true }).eq('is_answered', false),
+        supabase.from('files').select('id', { count: 'exact', head: true })
+      ]);
+      document.getElementById('current-projects').textContent = currentProjects ?? 0;
+      document.getElementById('completed-projects').textContent = completedProjects ?? 0;
+      document.getElementById('open-comments').textContent = openComments ?? 0;
+      document.getElementById('files-count').textContent = filesCount ?? 0;
+
+      // Fetch latest comments (grouped by project, only open comments)
+      const { data: openCommentsList, error: openCommentsError } = await supabase
+        .from('comments')
+        .select('project_id, created_at')
+        .eq('is_answered', false);
+      let projectCommentMap = {};
+      let latestCommentTime = {};
+      if (openCommentsList && openCommentsList.length > 0) {
+        openCommentsList.forEach(c => {
+          if (!projectCommentMap[c.project_id]) {
+            projectCommentMap[c.project_id] = 0;
+            latestCommentTime[c.project_id] = c.created_at;
+          }
+          projectCommentMap[c.project_id]++;
+          // Find the latest comment time for each project
+          if (new Date(c.created_at) > new Date(latestCommentTime[c.project_id])) {
+            latestCommentTime[c.project_id] = c.created_at;
+          }
+        });
+      }
+      // Fetch project names for all project_ids
+      let projectNames = {};
+      const projectIds = Object.keys(projectCommentMap);
+      if (projectIds.length > 0) {
+        const { data: projectsData } = await supabase
+          .from('projects')
+          .select('id, name')
+          .in('id', projectIds);
+        if (projectsData) {
+          projectsData.forEach(p => { projectNames[p.id] = p.name; });
+        }
+      }
+      // Helper to format time ago
+      function timeAgo(dateString) {
+        const now = new Date();
+        const then = new Date(dateString);
+        const diffMs = now - then;
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 1) return 'just now';
+        if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+        const diffDays = Math.floor(diffHours / 24);
+        return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+      }
+      const commentsList = document.getElementById('latest-comments-list');
+      if (projectIds.length > 0) {
+        commentsList.innerHTML = projectIds.map(pid => `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;">
+            <div style="font-weight:700;font-size:1.15em;color:#18192b;text-decoration:underline;">${projectNames[pid] || '-'}</div>
+            <div style="color:#e53935;font-size:0.98em;font-weight:500;">${projectCommentMap[pid]} open comment${projectCommentMap[pid] === 1 ? '' : 's'}</div>
+            <div style="color:#888;font-size:0.95em;">${timeAgo(latestCommentTime[pid])}</div>
+          </div>
+        `).join('') + `<div style='margin-top:18px;font-size:0.98em;color:#888;text-align:center;'>To answer comments please go to the Comments section.</div>`;
+      } else {
+        commentsList.innerHTML = '<div>No open comments found.</div>';
+      }
+
+      // Fetch latest files (with title, created_at, file_type, file_path)
+      const { data: latestFiles, error: filesError } = await supabase
+        .from('files')
+        .select('title, created_at, id, file_type, file_path')
+        .order('created_at', { ascending: false })
+        .limit(3);
+      const filesList = document.getElementById('latest-files-list');
+      function fileTypeColor(type) {
+        if (!type) return '#888';
+        const t = type.toLowerCase();
+        if (t.includes('pdf')) return '#e53935';
+        if (t.includes('cad') || t.includes('dwg') || t.includes('dxf')) return '#ff9800';
+        if (t.includes('word') || t.includes('doc')) return '#ffd600';
+        if (t.includes('excel') || t.includes('xls') || t.includes('csv')) return '#43a047';
+        return '#888';
+      }
+      function isCAD(type) {
+        if (!type) return false;
+        const t = type.toLowerCase();
+        return t.includes('cad') || t.includes('dwg') || t.includes('dxf');
+      }
+      if (latestFiles && latestFiles.length > 0) {
+        // Generate signed URLs for all non-CAD files
+        const signedUrls = await Promise.all(latestFiles.map(async (f) => {
+          if (isCAD(f.file_type)) return null;
+          const { data } = await supabase.storage
+            .from('documents')
+            .createSignedUrl(f.file_path, 60 * 60); // 1 hour expiry
+          return data?.signedUrl || null;
+        }));
+        filesList.innerHTML = latestFiles.map((f, i) => {
+          const cad = isCAD(f.file_type);
+          const fileUrl = cad ? '#' : signedUrls[i];
+          return `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:0;background:#f6f7fb;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.04);padding:12px 16px;">
+            <div style='flex:2;min-width:0;'>
+              <div style='font-size:1em;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;'>${f.title}</div>
+              <div style='font-size:0.85em;color:#888;margin-top:2px;text-align:left;'>${timeAgo(f.created_at)}</div>
+            </div>
+            <div style='flex:1;display:flex;justify-content:center;align-items:center;min-width:80px;'>
+              <span style='font-size:0.95em;font-weight:600;color:${fileTypeColor(f.file_type)};'>${f.file_type ? f.file_type.toUpperCase() : ''}</span>
+            </div>
+            <div style='flex:1;display:flex;justify-content:flex-end;'>
+              ${cad
+                ? `<button class='btn btn-sm btn-outline-secondary' disabled style='opacity:0.6;cursor:not-allowed;'>View File</button>`
+                : `<a href='${fileUrl}' target='_blank' rel='noopener'><button class='btn btn-sm btn-outline-primary'>View File</button></a>`
+              }
+            </div>
+          </div>
+          `;
+        }).join('');
+      } else {
+        filesList.innerHTML = '<div>No files found.</div>';
+      }
+    }
+
+    // Logout handler
+    document.addEventListener('DOMContentLoaded', function() {
+      checkAuthAndLoadUser();
+      loadDashboardData();
+      const logoutBtn = document.querySelector('.btn.btn-outline-light');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', async function() {
+          await supabase.auth.signOut();
+          window.location.href = 'login.html';
+        });
+      }
+      // Debug navigation for dashboard cards
+      document.getElementById('card-current-projects').onclick = function() {
+        window.location.href = 'projects.html';
+      };
+      document.getElementById('card-completed-projects').onclick = function() {
+        window.location.href = 'projects.html';
+      };
+      document.getElementById('card-open-comments').onclick = function() {
+        window.location.href = 'comments.html';
+      };
+      document.getElementById('card-files').onclick = function() {
+        window.location.href = 'files.html';
+      };
+    });
+  </script>
+</body>
+</html> 
