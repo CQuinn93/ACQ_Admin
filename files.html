@@ -223,6 +223,20 @@
           // The rest can be filled/edited by user
         };
       }
+      function updateSaveButtonState() {
+        const hasUnrecognized = !!document.querySelector('.meta-project-id[data-unrecognized="1"]');
+        const saveBtn = document.querySelector('#file-meta-form button[type="submit"]');
+        if (saveBtn) saveBtn.disabled = hasUnrecognized;
+      }
+      function removeFileCard(idx) {
+        selectedFiles.splice(idx, 1);
+        if (selectedFiles.length === 0) {
+          const modal = bootstrap.Modal.getInstance(document.getElementById('fileMetaModal'));
+          if (modal) modal.hide();
+          return;
+        }
+        openFileMetaModal(selectedFiles);
+      }
       async function openFileMetaModal(files) {
         selectedFiles = Array.from(files);
         // Fetch all projects for project matching
@@ -233,15 +247,19 @@
           const parsed = parseFilename(file.name);
           // Try to match project by shorthand_ref or code
           let project = projects.find(p => p.code === parsed.shorthand_ref || p.shorthand_ref === parsed.shorthand_ref);
+          const unrecognized = !project;
           return `
             <div class="card mb-4" style="border-radius:10px;">
               <div class="card-body">
-                <div class="mb-2"><b>File:</b> ${file.name}</div>
+                <div class="mb-2 d-flex justify-content-between align-items-center"><b>File:</b> ${file.name}
+                  <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeFileCard(${idx})">Remove</button>
+                </div>
+                ${unrecognized ? `<div class='alert alert-warning py-2 px-3 mb-3'>No such project exists in our system. Your file name may be incorrect.</div>` : ''}
                 <div class="row g-3">
                   <div class="col-md-6">
                     <label class="form-label">Project</label>
                     <input type="text" class="form-control meta-project" data-idx="${idx}" value="${project ? project.name : ''}" readonly>
-                    <input type="hidden" class="meta-project-id" data-idx="${idx}" value="${project ? project.id : ''}">
+                    <input type="hidden" class="meta-project-id" data-idx="${idx}" value="${project ? project.id : ''}" ${unrecognized ? 'data-unrecognized="1"' : ''}>
                   </div>
                   <div class="col-md-6">
                     <label class="form-label">Drawing Number</label>
@@ -286,6 +304,15 @@
         document.getElementById('file-meta-cards').innerHTML = cardsHtml;
         const modal = new bootstrap.Modal(document.getElementById('fileMetaModal'));
         modal.show();
+        updateSaveButtonState();
+        // Re-attach remove button logic (for dynamic HTML)
+        window.removeFileCard = function(idx) {
+          removeFileCard(idx);
+        };
+        // Re-check save button state if user removes a file
+        document.querySelectorAll('.btn-outline-danger').forEach(btn => {
+          btn.addEventListener('click', updateSaveButtonState);
+        });
       }
       const uploadArea = document.getElementById('upload-area');
       const fileInput = document.getElementById('file-input');
@@ -325,6 +352,12 @@
       // Prevent default dragover/drop on the whole document
       document.addEventListener('dragover', function(e) { e.preventDefault(); });
       document.addEventListener('drop', function(e) { e.preventDefault(); });
+      // Re-check save button state if user edits fields (in case of dynamic changes)
+      document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('meta-project-id')) {
+          updateSaveButtonState();
+        }
+      });
     });
 
     async function uploadFilesAndSaveMetadata(files) {
