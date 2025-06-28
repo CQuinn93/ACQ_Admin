@@ -108,6 +108,9 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwZG9scXJ6cmhzdXBmcWJtaXBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3OTA5MTEsImV4cCI6MjA2MjM2NjkxMX0.ZTcBrD9RJ_7nw0zvxJxk1YGcxYuSE14lbUQZ-YrEQbU';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // Configuration - Update this URL with your actual Netlify function URL
+    const NOTIFICATION_FUNCTION_URL = 'https://docs.acqds.com/.netlify/functions/sendNotification';
+
     let allFiles = [];
     async function loadFilesTable() {
       const tableBody = document.getElementById('files-table-body');
@@ -346,6 +349,11 @@
           if (success) {
             loadFilesTable();
             alert('Files uploaded successfully!');
+            // Get project_id from the first uploaded file
+            const projectId = document.querySelector('.meta-project-id[data-idx="0"]').value;
+            if (projectId) {
+              showNotificationButton(projectId);
+            }
           }
         });
       }
@@ -399,6 +407,68 @@
         return true;
       }));
       return success.every(Boolean);
+    }
+
+    // Add notification functionality
+    async function sendNotification(projectCode, updateType) {
+      try {
+        const response = await fetch(NOTIFICATION_FUNCTION_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectCode: projectCode,
+            updateType: updateType
+          })
+        });
+        
+        if (response.ok) {
+          alert('Notifications sent successfully!');
+        } else {
+          alert('Failed to send notifications. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error sending notification:', error);
+        alert('Error sending notifications. Please check your connection and try again.');
+      }
+    }
+
+    // Function to show notification button after successful upload
+    async function showNotificationButton(projectId) {
+      // Get project code for the uploaded files
+      const { data: project } = await supabase
+        .from('projects')
+        .select('code')
+        .eq('id', projectId)
+        .single();
+      
+      if (project && project.code) {
+        // Get notification user count
+        const { count, error } = await supabase
+          .from('notifications')
+          .select('id', { count: 'exact' })
+          .eq('project_code', project.code);
+        let userCount = (typeof count === 'number') ? count : 0;
+        // Create notification button
+        const notificationDiv = document.createElement('div');
+        notificationDiv.className = 'alert alert-success mt-3';
+        notificationDiv.innerHTML = `
+          <div class=\"d-flex justify-content-between align-items-center\">
+            <span>Files uploaded successfully!</span>
+            <button class=\"btn btn-primary btn-sm\" onclick=\"sendNotification('${project.code}', 'drawing')\"${userCount === 0 ? ' disabled' : ''}>
+              <i class=\"bi bi-bell me-1\"></i>Send notification out to ${userCount} user${userCount === 1 ? '' : 's'}
+            </button>
+          </div>
+        `;
+        // Insert after the upload area
+        const uploadArea = document.getElementById('upload-area');
+        uploadArea.parentNode.insertBefore(notificationDiv, uploadArea.nextSibling);
+        // Remove the notification after 10 seconds
+        setTimeout(() => {
+          if (notificationDiv.parentNode) {
+            notificationDiv.parentNode.removeChild(notificationDiv);
+          }
+        }, 10000);
+      }
     }
   </script>
 </body>

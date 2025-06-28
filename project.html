@@ -102,9 +102,35 @@
           <div class="card p-4 mb-4 card-scrollable flex-grow-1" style="border-radius: 14px;">
             <h5>Recent Comments</h5>
             <ul>
-              <li>Comment 1 (placeholder)</li>
-              <li>Comment 2 (placeholder)</li>
+              ${(comments && comments.length) ? comments.slice(0,5).map((c, idx) => {
+                const file = fileIdToInfo[c.file_id];
+                return `<li class="d-flex justify-content-between align-items-center" style="margin-bottom:12px;">
+                  <span style="color:#1976d2;font-size:0.98em;font-weight:600;">${file ? (file.file_number ? file.file_number + ' ' : '') + file.title : 'Unknown Drawing'}</span>
+                  <button class="btn btn-sm btn-outline-primary ms-2 view-comment-btn" data-comment-idx="${idx}">View Comment</button>
+                </li>`;
+              }).join('') : '<li class="text-muted">No comments yet.</li>'}
             </ul>
+          </div>
+          
+          <!-- Add Comment Section -->
+          <div class="card p-4 mb-4" style="border-radius: 14px;">
+            <h5>Add New Comment</h5>
+            <form id="add-comment-form">
+              <div class="mb-3">
+                <label class="form-label">Select File</label>
+                <select class="form-select" id="comment-file-select" required>
+                  <option value="">Choose a file...</option>
+                  ${files ? files.map(f => `
+                    <option value="${f.id}">${f.file_number ? f.file_number + ' ' : ''}${f.title}</option>
+                  `).join('') : ''}
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Comment</label>
+                <textarea class="form-control" id="comment-content" rows="4" placeholder="Enter your comment..." required></textarea>
+              </div>
+              <button type="submit" class="btn w-100" style="background:#0F112B;color:#fff;">Add Comment</button>
+            </form>
           </div>
         </div>
       </div>
@@ -130,6 +156,9 @@
     const SUPABASE_URL = 'https://updolqrzrhsupfqbmipd.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwZG9scXJ6cmhzdXBmcWJtaXBkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY3OTA5MTEsImV4cCI6MjA2MjM2NjkxMX0.ZTcBrD9RJ_7nw0zvxJxk1YGcxYuSE14lbUQZ-YrEQbU';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Configuration - Update this URL with your actual Netlify function URL
+    const NOTIFICATION_FUNCTION_URL = 'https://docs.acqds.com/.netlify/functions/sendNotification';
 
     function getProjectIdFromUrl() {
       const params = new URLSearchParams(window.location.search);
@@ -334,6 +363,27 @@
                 }).join('') : '<li class="text-muted">No comments yet.</li>'}
               </ul>
             </div>
+            
+            <!-- Add Comment Section -->
+            <div class="card p-4 mb-4" style="border-radius: 14px;">
+              <h5>Add New Comment</h5>
+              <form id="add-comment-form">
+                <div class="mb-3">
+                  <label class="form-label">Select File</label>
+                  <select class="form-select" id="comment-file-select" required>
+                    <option value="">Choose a file...</option>
+                    ${files ? files.map(f => `
+                      <option value="${f.id}">${f.file_number ? f.file_number + ' ' : ''}${f.title}</option>
+                    `).join('') : ''}
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Comment</label>
+                  <textarea class="form-control" id="comment-content" rows="4" placeholder="Enter your comment..." required></textarea>
+                </div>
+                <button type="submit" class="btn w-100" style="background:#0F112B;color:#fff;">Add Comment</button>
+              </form>
+            </div>
           </div>
         </div>
       `;
@@ -451,6 +501,8 @@
           .eq('id', projectId);
         if (!error) {
           alert('Stage updated!');
+          // Show notification button for stage update
+          showStageNotificationButton(project.code);
           loadProject();
         } else {
           alert('Failed to update stage.');
@@ -484,6 +536,148 @@
             btnSpan.innerHTML = `<a href='${signedUrl}' target='_blank' rel='noopener'><button class='btn btn-sm btn-outline-primary'>View File</button></a>`;
           }
         }
+      }
+
+      // Add comment form functionality
+      const addCommentForm = document.getElementById('add-comment-form');
+      if (addCommentForm) {
+        addCommentForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          const fileId = document.getElementById('comment-file-select').value;
+          const content = document.getElementById('comment-content').value;
+          
+          if (!fileId || !content.trim()) {
+            alert('Please select a file and enter a comment.');
+            return;
+          }
+
+          // Get current user name
+          const { data: { session } } = await supabase.auth.getSession();
+          const userEmail = session?.user?.email;
+          const { data: userData } = await supabase
+            .from('users')
+            .select('name')
+            .eq('email', userEmail)
+            .single();
+          
+          const author = userData?.name || userEmail || 'Unknown';
+
+          // Insert comment
+          const { error } = await supabase
+            .from('comments')
+            .insert([
+              {
+                file_id: fileId,
+                project_id: projectId,
+                author: author,
+                content: content.trim(),
+                created_at: new Date().toISOString()
+              }
+            ]);
+
+          if (error) {
+            alert('Failed to add comment: ' + error.message);
+            return;
+          }
+
+          // Clear form
+          document.getElementById('comment-content').value = '';
+          document.getElementById('comment-file-select').value = '';
+
+          // Show success message with notification button
+          showCommentNotificationButton(project.code);
+
+          // Reload project to show new comment
+          loadProject();
+        });
+      }
+    }
+
+    // Add notification functionality
+    async function sendNotification(projectCode, updateType) {
+      try {
+        const response = await fetch(NOTIFICATION_FUNCTION_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            projectCode: projectCode,
+            updateType: updateType
+          })
+        });
+        
+        if (response.ok) {
+          alert('Notifications sent successfully!');
+        } else {
+          alert('Failed to send notifications. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error sending notification:', error);
+        alert('Error sending notifications. Please check your connection and try again.');
+      }
+    }
+
+    // Function to show notification button after successful comment
+    async function showCommentNotificationButton(projectCode) {
+      if (!projectCode) return;
+      // Get notification user count
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact' })
+        .eq('project_code', projectCode);
+      let userCount = (typeof count === 'number') ? count : 0;
+      // Create notification button
+      const notificationDiv = document.createElement('div');
+      notificationDiv.className = 'alert alert-success mt-3';
+      notificationDiv.innerHTML = `
+        <div class=\"d-flex justify-content-between align-items-center\">
+          <span>Comment added successfully!</span>
+          <button class=\"btn btn-primary btn-sm\" onclick=\"sendNotification('${projectCode}', 'comment')\"${userCount === 0 ? ' disabled' : ''}>
+            <i class=\"bi bi-bell me-1\"></i>Send notification out to ${userCount} user${userCount === 1 ? '' : 's'}
+          </button>
+        </div>
+      `;
+      // Insert after the add comment form
+      const addCommentForm = document.getElementById('add-comment-form');
+      if (addCommentForm) {
+        addCommentForm.parentNode.insertBefore(notificationDiv, addCommentForm.nextSibling);
+        setTimeout(() => {
+          if (notificationDiv.parentNode) {
+            notificationDiv.parentNode.removeChild(notificationDiv);
+          }
+        }, 10000);
+      }
+    }
+
+    // Function to show notification button after successful stage update
+    async function showStageNotificationButton(projectCode) {
+      if (!projectCode) return;
+      // Get notification user count
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact' })
+        .eq('project_code', projectCode);
+      let userCount = (typeof count === 'number') ? count : 0;
+      // Create notification button
+      const notificationDiv = document.createElement('div');
+      notificationDiv.className = 'alert alert-success mt-3';
+      notificationDiv.innerHTML = `
+        <div class=\"d-flex justify-content-between align-items-center\">
+          <span>Stage updated successfully!</span>
+          <button class=\"btn btn-primary btn-sm\" onclick=\"sendNotification('${projectCode}', 'stage')\"${userCount === 0 ? ' disabled' : ''}>
+            <i class=\"bi bi-bell me-1\"></i>Send notification out to ${userCount} user${userCount === 1 ? '' : 's'}
+          </button>
+        </div>
+      `;
+      // Insert after the save stage button
+      const saveStageBtn = document.getElementById('save-stage-btn');
+      if (saveStageBtn) {
+        saveStageBtn.parentNode.insertBefore(notificationDiv, saveStageBtn.nextSibling);
+        setTimeout(() => {
+          if (notificationDiv.parentNode) {
+            notificationDiv.parentNode.removeChild(notificationDiv);
+          }
+        }, 10000);
       }
     }
 
