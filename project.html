@@ -500,10 +500,9 @@
           .update({ stage: stageMap[newStageNum] })
           .eq('id', projectId);
         if (!error) {
-          alert('Stage updated!');
           // Show notification button for stage update
           showStageNotificationButton(project.code);
-          loadProject();
+          // Do not reload project immediately so the notification is visible
         } else {
           alert('Failed to update stage.');
         }
@@ -676,8 +675,10 @@
         setTimeout(() => {
           if (notificationDiv.parentNode) {
             notificationDiv.parentNode.removeChild(notificationDiv);
+            // Optionally reload project after notification disappears
+            loadProject();
           }
-        }, 10000);
+        }, 30000);
       }
     }
 
