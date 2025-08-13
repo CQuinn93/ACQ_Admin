@@ -229,7 +229,7 @@
       function updateSaveButtonState() {
         const hasUnrecognized = !!document.querySelector('.meta-project-id[data-unrecognized="1"]');
         const saveBtn = document.querySelector('#file-meta-form button[type="submit"]');
-        if (saveBtn) saveBtn.disabled = hasUnrecognized;
+        if (saveBtn) saveBtn.disabled = false; // Allow saving even for unrecognized projects
       }
       function removeFileCard(idx) {
         selectedFiles.splice(idx, 1);
@@ -257,11 +257,14 @@
                 <div class="mb-2 d-flex justify-content-between align-items-center"><b>File:</b> ${file.name}
                   <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeFileCard(${idx})">Remove</button>
                 </div>
-                ${unrecognized ? `<div class='alert alert-warning py-2 px-3 mb-3'>No such project exists in our system. Your file name may be incorrect.</div>` : ''}
+                ${unrecognized ? `<div class='alert alert-warning py-2 px-3 mb-3'>Project not automatically detected. Please select a project manually.</div>` : ''}
                 <div class="row g-3">
                   <div class="col-md-6">
                     <label class="form-label">Project</label>
-                    <input type="text" class="form-control meta-project" data-idx="${idx}" value="${project ? project.name : ''}" readonly>
+                    <select class="form-select meta-project-select" data-idx="${idx}" ${unrecognized ? '' : 'disabled'}>
+                      <option value="">Select a project...</option>
+                      ${projects.map(p => `<option value="${p.id}" ${project && project.id === p.id ? 'selected' : ''}>${p.name} (${p.code})</option>`).join('')}
+                    </select>
                     <input type="hidden" class="meta-project-id" data-idx="${idx}" value="${project ? project.id : ''}" ${unrecognized ? 'data-unrecognized="1"' : ''}>
                   </div>
                   <div class="col-md-6">
@@ -308,6 +311,21 @@
         const modal = new bootstrap.Modal(document.getElementById('fileMetaModal'));
         modal.show();
         updateSaveButtonState();
+        
+        // Add event listeners for project selection
+        document.querySelectorAll('.meta-project-select').forEach(select => {
+          select.addEventListener('change', function() {
+            const idx = this.getAttribute('data-idx');
+            const projectId = this.value;
+            const projectIdInput = document.querySelector(`.meta-project-id[data-idx="${idx}"]`);
+            if (projectIdInput) {
+              projectIdInput.value = projectId;
+              projectIdInput.removeAttribute('data-unrecognized');
+            }
+            updateSaveButtonState();
+          });
+        });
+        
         // Re-attach remove button logic (for dynamic HTML)
         window.removeFileCard = function(idx) {
           removeFileCard(idx);
