@@ -212,19 +212,36 @@
       }
       let selectedFiles = [];
       function parseFilename(fileName) {
-        // Example: CLN-CCK-B6-01-DR-A-004100 First Floor Plan.pdf
-        const [main, ...titleParts] = fileName.replace(/\.[^.]+$/, '').split(' ');
-        const title = titleParts.join(' ');
-        const parts = main.split('-');
-        // parts: [shorthand_ref, type, level, doc_type, 'A', number]
-        return {
-          shorthand_ref: parts[0] || '',
-          type: parts[3] || '', // doc_type
-          file_number: parts.slice(0, 6).join('-'),
-          number: parts[5] || '',
-          title: title || '',
-          // The rest can be filled/edited by user
-        };
+        // Example: CLN-CCK-B6-01-DR-A-004100 - First Floor Plan.pdf
+        const fileNameWithoutExt = fileName.replace(/\.[^.]+$/, '');
+        const parts = fileNameWithoutExt.split(' - ');
+        
+        if (parts.length >= 2) {
+          const main = parts[0]; // Drawing number part
+          const title = parts.slice(1).join(' - '); // Title part (in case there are multiple " - " in the title)
+          const mainParts = main.split('-');
+          
+          return {
+            shorthand_ref: mainParts[0] || '',
+            type: mainParts[3] || '', // doc_type
+            file_number: main, // Use the full main part as file_number
+            number: mainParts[5] || '',
+            title: title || '',
+            // The rest can be filled/edited by user
+          };
+        } else {
+          // Fallback if no " - " found, treat entire filename as drawing number
+          const main = fileNameWithoutExt;
+          const mainParts = main.split('-');
+          
+          return {
+            shorthand_ref: mainParts[0] || '',
+            type: mainParts[3] || '',
+            file_number: main,
+            number: mainParts[5] || '',
+            title: '',
+          };
+        }
       }
       function updateSaveButtonState() {
         const hasUnrecognized = !!document.querySelector('.meta-project-id[data-unrecognized="1"]');
