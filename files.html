@@ -245,7 +245,7 @@
         // Fetch all projects for project matching
         const { data: projects } = await supabase.from('projects').select('id, code, name, shorthand_ref');
         const userName = document.getElementById('sidebar-user').textContent.replace('Welcome ', '');
-        const stageOptions = ['Draft', 'Review', 'Approved', 'Final'];
+        const stageOptions = ['draft', 'review', 'approved', 'final'];
         const cardsHtml = selectedFiles.map((file, idx) => {
           const parsed = parseFilename(file.name);
           // Try to match project by shorthand_ref or code
